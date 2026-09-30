@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
   <title>Melek &amp; Mustafa — Bir Aşk Hikayesi</title>
-  <meta name="description" content="Melek ve Mustafa için özel olarak tasarlanmış 3D mektuplu, canlı dilek sayacına sahip romantik web deneyimi.">
+  <meta name="description" content="Melek ve Mustafa için özel olarak tasarlanmış 3D mektuplu, yerel hafızalı romantik web deneyimi.">
 
   <!-- Google Fonts Imports -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -347,7 +347,6 @@
       touch-action: manipulation;
     }
 
-    /* Görsel 2: Melek & Mustafa Yavaş Yumuşak Renk Geçişli Başlık */
     .hero-title {
       font-family: 'Tangerine', cursive;
       font-weight: 700;
@@ -842,7 +841,6 @@
       min-height: 160px;
     }
 
-    /* Görsel 3: Mektup imzası küçültüldü */
     .letter-signature {
       margin-top: 20px;
       padding-top: 14px;
@@ -1058,7 +1056,6 @@
       </nav>
 
       <div class="nav-actions">
-        <!-- Görsel 1: Yapraklar butonu kaldırıldı -->
         <button id="btnMusic" class="btn-pill btn-music" onclick="toggleMusic()" aria-label="Müzik Çal/Durdur">
           <div class="audio-vis" id="audioVis">
             <div class="audio-bar"></div>
@@ -1094,7 +1091,6 @@
       <div class="heart-canvas-wrapper">
         <canvas id="heartCanvas" onclick="triggerHeartBurst()" title="Yıldızların oluşturduğu atan kalbe tıkla"></canvas>
       </div>
-      <!-- Görsel 2: Melek & Mustafa yavaş yumuşak renk geçişli hero başlığı -->
       <h1 class="hero-title">Melek &amp; Mustafa</h1>
       <p class="hero-sub">Sonsuza Kadar Sürecek Bir Aşk</p>
       
@@ -1196,7 +1192,6 @@
         <div class="parchment-border">
           <div class="letter-salute">Sevgili Melek,</div>
           <div class="letter-body" id="letterBodyText"></div>
-          <!-- Görsel 3: Mektup imzası küçültüldü -->
           <div class="letter-signature">
             <span>Seni Sonsuz Bir Aşkla Seven — Mustafa</span>
             <span style="font-size: 1.1em; color:#ff3b70;">❤️</span>
@@ -1234,64 +1229,21 @@
   </footer>
 
   <script>
-    // GitHub Pages ile %100 Uyumlu, Ücretsiz ve Güvenli Canlı Sayaç (CounterAPI + Yerel Yedekli)
-    const COUNTER_API_URL = 'https://api.counterapi.dev/v1/melek_mustafa_love_2026_v3/wishes';
-    let globalWishCount = parseInt(localStorage.getItem('mm_local_wish_backup') || '0', 10);
+    // ==========================================
+    // SADECE YEREL HAFIZA (LOCALSTORAGE) SİSTEMİ
+    // Hiçbir dış bağlantı yoktur, asla engellenmez.
+    // ==========================================
+    let localWishCount = parseInt(localStorage.getItem('mm_local_wish_count') || '0', 10);
 
     function updateWishCountersUI() {
       const navEl = document.getElementById('wishCountNav');
       const secEl = document.getElementById('wishCountSection');
-      if (navEl) navEl.textContent = globalWishCount;
-      if (secEl) secEl.textContent = globalWishCount;
+      if (navEl) navEl.textContent = localWishCount;
+      if (secEl) secEl.textContent = localWishCount;
     }
+    
+    // Sayfa açılışında değeri hemen yansıt
     updateWishCountersUI();
-
-    async function fetchGlobalWishes() {
-      try {
-        const res = await fetch(COUNTER_API_URL);
-        if (res.ok) {
-          const data = await res.json();
-          if (data && typeof data.count === 'number') {
-            globalWishCount = data.count;
-            localStorage.setItem('mm_local_wish_backup', globalWishCount);
-          }
-        } else if (res.status === 404) {
-          const createRes = await fetch(`${COUNTER_API_URL}/up`);
-          if (createRes.ok) {
-            const createData = await createRes.json();
-            globalWishCount = createData.count || 1;
-            localStorage.setItem('mm_local_wish_backup', globalWishCount);
-          }
-        }
-      } catch (err) {
-        console.log("Canlı sayaç çekme hatası (yerel yedek kullanılıyor):", err);
-      }
-      updateWishCountersUI();
-    }
-
-    async function syncWishIncrement() {
-      globalWishCount++;
-      updateWishCountersUI();
-      localStorage.setItem('mm_local_wish_backup', globalWishCount);
-
-      try {
-        const res = await fetch(`${COUNTER_API_URL}/up`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data && typeof data.count === 'number') {
-            globalWishCount = data.count;
-            localStorage.setItem('mm_local_wish_backup', globalWishCount);
-            updateWishCountersUI();
-          }
-        }
-      } catch (err) {
-        console.log("Canlı sayaç artırma hatası:", err);
-      }
-    }
-
-    // Otomatik senkronizasyon
-    fetchGlobalWishes();
-    setInterval(fetchGlobalWishes, 5000);
 
     const START_DATE = new Date('2026-05-26T00:00:00');
 
@@ -1737,8 +1689,11 @@
       } catch(e) {}
     }
 
+    // YEREL HAFIZALI DİLEK TUTMA
     function makeWish() {
-      syncWishIncrement();
+      localWishCount++;
+      localStorage.setItem('mm_local_wish_count', localWishCount);
+      updateWishCountersUI();
 
       playWishChime();
       const toast = document.getElementById('wishToast');
