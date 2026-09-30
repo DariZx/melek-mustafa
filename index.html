@@ -1058,7 +1058,7 @@
       </nav>
 
       <div class="nav-actions">
-        <!-- Görsel 1: Yapraklar butonu kaldırıldı, sadece Melodi ve Dilek butonları var -->
+        <!-- Görsel 1: Yapraklar butonu kaldırıldı -->
         <button id="btnMusic" class="btn-pill btn-music" onclick="toggleMusic()" aria-label="Müzik Çal/Durdur">
           <div class="audio-vis" id="audioVis">
             <div class="audio-bar"></div>
@@ -1070,7 +1070,7 @@
         </button>
 
         <button class="btn-pill btn-wish" onclick="makeWish()" aria-label="Dilek Tut">
-          <span>✨ <span class="btn-text-full">Dilek Tut</span> (<span id="wishCountNav">...</span>)</span>
+          <span>✨ <span class="btn-text-full">Dilek Tut</span> (<span id="wishCountNav">0</span>)</span>
         </button>
 
         <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMobileMenu()" aria-label="Menüyü Aç/Kapat">
@@ -1222,7 +1222,7 @@
         <h3 style="font-family:'Cormorant Garamond',serif; font-size:clamp(22px, 5vw, 26px); color:#ffffff; font-weight:400; margin-bottom:8px;">Birlikte Bir Dilek Tutalım mı?</h3>
         <p style="font-size:clamp(12px, 2.8vw, 14px); color:var(--text-muted); margin-bottom:20px; max-width:420px;">Bu butona bastığında ortak canlı dilek sayacı eş zamanlı olarak yükselir ve gökyüzünden kayan yıldızlar akar.</p>
         <button class="btn-pill" onclick="makeWish()" style="background:linear-gradient(135deg, #fde047, #fbcfe8, #fde047); color:#160621; font-weight:700; padding:12px 28px; font-size:14px; border:none; box-shadow:0 0 25px rgba(253,224,71,0.4);">
-          Kayan Yıldız Bırak ✨ (<span id="wishCountSection">...</span>)
+          Kayan Yıldız Bırak ✨ (<span id="wishCountSection">0</span>)
         </button>
       </div>
     </section>
@@ -1234,41 +1234,9 @@
   </footer>
 
   <script>
-    // GitHub Pages ile %100 Uyumlu, Ücretsiz ve Kayıtsız Canlı Sayaç (CounterAPI)
-    const COUNTER_API_URL = 'https://api.counterapi.dev/v1/melek_mustafa_love_2026/wishes';
-    let globalWishCount = 0;
-
-    async function fetchGlobalWishes() {
-      try {
-        const res = await fetch(COUNTER_API_URL);
-        if (res.ok) {
-          const data = await res.json();
-          globalWishCount = data.count || 0;
-        } else if (res.status === 404) {
-          const createRes = await fetch(`${COUNTER_API_URL}/up`);
-          const createData = await createRes.json();
-          globalWishCount = createData.count || 1;
-        }
-        updateWishCountersUI();
-      } catch (err) {
-        console.log("Canlı sayaç çekme hatası:", err);
-      }
-    }
-
-    async function syncWishIncrement() {
-      globalWishCount++;
-      updateWishCountersUI();
-      try {
-        const res = await fetch(`${COUNTER_API_URL}/up`);
-        if (res.ok) {
-          const data = await res.json();
-          globalWishCount = data.count || globalWishCount;
-          updateWishCountersUI();
-        }
-      } catch (err) {
-        console.log("Canlı sayaç artırma hatası:", err);
-      }
-    }
+    // GitHub Pages ile %100 Uyumlu, Ücretsiz ve Güvenli Canlı Sayaç (CounterAPI + Yerel Yedekli)
+    const COUNTER_API_URL = 'https://api.counterapi.dev/v1/melek_mustafa_love_2026_v3/wishes';
+    let globalWishCount = parseInt(localStorage.getItem('mm_local_wish_backup') || '0', 10);
 
     function updateWishCountersUI() {
       const navEl = document.getElementById('wishCountNav');
@@ -1276,8 +1244,52 @@
       if (navEl) navEl.textContent = globalWishCount;
       if (secEl) secEl.textContent = globalWishCount;
     }
+    updateWishCountersUI();
 
-    // İlk açılışta canlı sayacı çek ve her 5 saniyede bir otomatik senkronize et
+    async function fetchGlobalWishes() {
+      try {
+        const res = await fetch(COUNTER_API_URL);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && typeof data.count === 'number') {
+            globalWishCount = data.count;
+            localStorage.setItem('mm_local_wish_backup', globalWishCount);
+          }
+        } else if (res.status === 404) {
+          const createRes = await fetch(`${COUNTER_API_URL}/up`);
+          if (createRes.ok) {
+            const createData = await createRes.json();
+            globalWishCount = createData.count || 1;
+            localStorage.setItem('mm_local_wish_backup', globalWishCount);
+          }
+        }
+      } catch (err) {
+        console.log("Canlı sayaç çekme hatası (yerel yedek kullanılıyor):", err);
+      }
+      updateWishCountersUI();
+    }
+
+    async function syncWishIncrement() {
+      globalWishCount++;
+      updateWishCountersUI();
+      localStorage.setItem('mm_local_wish_backup', globalWishCount);
+
+      try {
+        const res = await fetch(`${COUNTER_API_URL}/up`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && typeof data.count === 'number') {
+            globalWishCount = data.count;
+            localStorage.setItem('mm_local_wish_backup', globalWishCount);
+            updateWishCountersUI();
+          }
+        }
+      } catch (err) {
+        console.log("Canlı sayaç artırma hatası:", err);
+      }
+    }
+
+    // Otomatik senkronizasyon
     fetchGlobalWishes();
     setInterval(fetchGlobalWishes, 5000);
 
